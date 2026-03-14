@@ -1,0 +1,24 @@
+name: 24h_Stream
+
+on:
+  schedule:
+    - cron: '0 */6 * * *' # প্রতি ৬ ঘণ্টা পর পর নিজে থেকে রিস্টার্ট হবে
+  workflow_dispatch:
+
+jobs:
+  stream:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Install FFmpeg
+      run: sudo apt update && sudo apt install -y ffmpeg
+
+    - name: Start Streaming
+      timeout-minutes: 355
+      run: |
+        ffmpeg -re -stream_loop -1 -i video.mp4 \
+        -c:v libx264 -preset veryfast -b:v 2500k -maxrate 2500k -bufsize 5000k \
+        -pix_fmt yuv420p -g 60 -c:a aac -b:a 128k -ar 44100 \
+        -f flv "rtmp://a.rtmp.youtube.com/live2/${{ secrets.STREAM_KEY }}"
